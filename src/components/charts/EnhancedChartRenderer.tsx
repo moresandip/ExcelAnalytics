@@ -43,14 +43,38 @@ const EnhancedChartRenderer: React.FC<EnhancedChartRendererProps> = ({
     // Clean up previous chart if it exists
     if (chartInstanceRef.current) {
       chartInstanceRef.current.destroy();
+      chartInstanceRef.current = null;
     }
     
     const ctx = chartRef.current.getContext('2d');
     if (!ctx) return;
     
-    // Extract data for the chart based on selected axes
-    const labels = data.map(item => item[options.xAxis]);
-    const dataValues = data.map(item => item[options.yAxis]);
+    // Extract and prepare data for the chart based on selected axes
+    let labels: string[];
+    let dataValues: number[];
+    
+    if (options.chartType === 'pie') {
+      // For pie charts, aggregate data by category
+      const aggregatedData = new Map<string, number>();
+      
+      data.forEach(item => {
+        const category = String(item[options.xAxis] || 'Unknown');
+        const value = Number(item[options.yAxis]) || 0;
+        
+        if (aggregatedData.has(category)) {
+          aggregatedData.set(category, aggregatedData.get(category)! + value);
+        } else {
+          aggregatedData.set(category, value);
+        }
+      });
+      
+      labels = Array.from(aggregatedData.keys());
+      dataValues = Array.from(aggregatedData.values());
+    } else {
+      // For other chart types, use data as-is but ensure labels are strings
+      labels = data.map(item => String(item[options.xAxis] || ''));
+      dataValues = data.map(item => Number(item[options.yAxis]) || 0);
+    }
     
     // Configure chart based on chart type
     let chartConfig;
@@ -157,8 +181,8 @@ const EnhancedChartRenderer: React.FC<EnhancedChartRendererProps> = ({
             datasets: [{
               label: `${options.xAxis} vs ${options.yAxis}`,
               data: data.map(item => ({
-                x: item[options.xAxis],
-                y: item[options.yAxis]
+                x: Number(item[options.xAxis]) || 0,
+                y: Number(item[options.yAxis]) || 0
               })),
               backgroundColor: 'rgba(37, 99, 235, 0.7)',
               borderColor: 'rgba(37, 99, 235, 1)',
@@ -277,6 +301,7 @@ const EnhancedChartRenderer: React.FC<EnhancedChartRendererProps> = ({
     return () => {
       if (chartInstanceRef.current) {
         chartInstanceRef.current.destroy();
+        chartInstanceRef.current = null;
       }
     };
   }, [options, data]);
@@ -286,8 +311,30 @@ const EnhancedChartRenderer: React.FC<EnhancedChartRendererProps> = ({
     
     setIsSaving(true);
     try {
-      const labels = data.map(item => item[options.xAxis]);
-      const values = data.map(item => item[options.yAxis]);
+      let labels: string[];
+      let values: number[];
+      
+      if (options.chartType === 'pie') {
+        // For pie charts, use aggregated data
+        const aggregatedData = new Map<string, number>();
+        
+        data.forEach(item => {
+          const category = String(item[options.xAxis] || 'Unknown');
+          const value = Number(item[options.yAxis]) || 0;
+          
+          if (aggregatedData.has(category)) {
+            aggregatedData.set(category, aggregatedData.get(category)! + value);
+          } else {
+            aggregatedData.set(category, value);
+          }
+        });
+        
+        labels = Array.from(aggregatedData.keys());
+        values = Array.from(aggregatedData.values());
+      } else {
+        labels = data.map(item => String(item[options.xAxis] || ''));
+        values = data.map(item => Number(item[options.yAxis]) || 0);
+      }
       
       await chartService.saveChart({
         fileId,
