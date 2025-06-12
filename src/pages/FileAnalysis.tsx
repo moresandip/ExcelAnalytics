@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ChartCreator } from '../components/charts';
 import EnhancedChartRenderer from '../components/charts/EnhancedChartRenderer';
+import Chart3DRenderer from '../components/charts/Chart3DRenderer';
+import Chart3DCreator from '../components/charts/Chart3DCreator';
+import PowerMapVisualization from '../components/charts/PowerMapVisualization';
 import { ChartOptions } from '../types';
-import { Save, Download, Trash2, AlertCircle, BarChart3, History, Zap, TrendingUp, FileText, Eye } from 'lucide-react';
+import { Save, Download, Trash2, AlertCircle, BarChart3, History, Zap, TrendingUp, FileText, Eye, Globe, Mountain, Layers } from 'lucide-react';
 import SavedChartsHistory from '../components/charts/SavedChartsHistory';
 
 const FileAnalysis: React.FC = () => {
@@ -18,6 +21,7 @@ const FileAnalysis: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [activeTab, setActiveTab] = useState<'2d' | '3d' | 'powermap'>('2d');
   const [analysisStats, setAnalysisStats] = useState({
     totalRows: 0,
     totalColumns: 0,
@@ -37,86 +41,86 @@ const FileAnalysis: React.FC = () => {
         // Enhanced mock file data with more comprehensive datasets
         if (fileId === '1') {
           setFileName('sales_data_2024.xlsx');
-          setColumns(['Month', 'Region', 'Sales', 'Profit', 'Units_Sold', 'Customer_Count']);
+          setColumns(['Month', 'Region', 'Sales', 'Profit', 'Units_Sold', 'Customer_Count', 'Latitude', 'Longitude']);
           const mockData = [
-            { Month: 'January', Region: 'North', Sales: 12500, Profit: 3750, Units_Sold: 125, Customer_Count: 89 },
-            { Month: 'February', Region: 'North', Sales: 13200, Profit: 3960, Units_Sold: 132, Customer_Count: 94 },
-            { Month: 'March', Region: 'North', Sales: 15800, Profit: 4740, Units_Sold: 158, Customer_Count: 112 },
-            { Month: 'April', Region: 'North', Sales: 14200, Profit: 4260, Units_Sold: 142, Customer_Count: 101 },
-            { Month: 'May', Region: 'North', Sales: 16800, Profit: 5040, Units_Sold: 168, Customer_Count: 119 },
-            { Month: 'January', Region: 'South', Sales: 9800, Profit: 2940, Units_Sold: 98, Customer_Count: 67 },
-            { Month: 'February', Region: 'South', Sales: 10300, Profit: 3090, Units_Sold: 103, Customer_Count: 71 },
-            { Month: 'March', Region: 'South', Sales: 11500, Profit: 3450, Units_Sold: 115, Customer_Count: 78 },
-            { Month: 'April', Region: 'South', Sales: 12100, Profit: 3630, Units_Sold: 121, Customer_Count: 82 },
-            { Month: 'May', Region: 'South', Sales: 13400, Profit: 4020, Units_Sold: 134, Customer_Count: 91 },
-            { Month: 'January', Region: 'East', Sales: 14200, Profit: 4260, Units_Sold: 142, Customer_Count: 98 },
-            { Month: 'February', Region: 'East', Sales: 15100, Profit: 4530, Units_Sold: 151, Customer_Count: 104 },
-            { Month: 'March', Region: 'East', Sales: 16800, Profit: 5040, Units_Sold: 168, Customer_Count: 115 },
-            { Month: 'April', Region: 'East', Sales: 17500, Profit: 5250, Units_Sold: 175, Customer_Count: 121 },
-            { Month: 'May', Region: 'East', Sales: 18900, Profit: 5670, Units_Sold: 189, Customer_Count: 130 },
-            { Month: 'January', Region: 'West', Sales: 10900, Profit: 3270, Units_Sold: 109, Customer_Count: 76 },
-            { Month: 'February', Region: 'West', Sales: 11700, Profit: 3510, Units_Sold: 117, Customer_Count: 81 },
-            { Month: 'March', Region: 'West', Sales: 13400, Profit: 4020, Units_Sold: 134, Customer_Count: 92 },
-            { Month: 'April', Region: 'West', Sales: 14800, Profit: 4440, Units_Sold: 148, Customer_Count: 102 },
-            { Month: 'May', Region: 'West', Sales: 15600, Profit: 4680, Units_Sold: 156, Customer_Count: 107 },
+            { Month: 'January', Region: 'North', Sales: 12500, Profit: 3750, Units_Sold: 125, Customer_Count: 89, Latitude: 45.5, Longitude: -100.2 },
+            { Month: 'February', Region: 'North', Sales: 13200, Profit: 3960, Units_Sold: 132, Customer_Count: 94, Latitude: 45.8, Longitude: -99.8 },
+            { Month: 'March', Region: 'North', Sales: 15800, Profit: 4740, Units_Sold: 158, Customer_Count: 112, Latitude: 46.1, Longitude: -100.5 },
+            { Month: 'April', Region: 'North', Sales: 14200, Profit: 4260, Units_Sold: 142, Customer_Count: 101, Latitude: 45.7, Longitude: -100.1 },
+            { Month: 'May', Region: 'North', Sales: 16800, Profit: 5040, Units_Sold: 168, Customer_Count: 119, Latitude: 46.0, Longitude: -99.9 },
+            { Month: 'January', Region: 'South', Sales: 9800, Profit: 2940, Units_Sold: 98, Customer_Count: 67, Latitude: 30.2, Longitude: -90.1 },
+            { Month: 'February', Region: 'South', Sales: 10300, Profit: 3090, Units_Sold: 103, Customer_Count: 71, Latitude: 30.5, Longitude: -89.8 },
+            { Month: 'March', Region: 'South', Sales: 11500, Profit: 3450, Units_Sold: 115, Customer_Count: 78, Latitude: 30.8, Longitude: -90.3 },
+            { Month: 'April', Region: 'South', Sales: 12100, Profit: 3630, Units_Sold: 121, Customer_Count: 82, Latitude: 30.4, Longitude: -90.0 },
+            { Month: 'May', Region: 'South', Sales: 13400, Profit: 4020, Units_Sold: 134, Customer_Count: 91, Latitude: 30.7, Longitude: -89.9 },
+            { Month: 'January', Region: 'East', Sales: 14200, Profit: 4260, Units_Sold: 142, Customer_Count: 98, Latitude: 40.7, Longitude: -74.0 },
+            { Month: 'February', Region: 'East', Sales: 15100, Profit: 4530, Units_Sold: 151, Customer_Count: 104, Latitude: 40.8, Longitude: -73.9 },
+            { Month: 'March', Region: 'East', Sales: 16800, Profit: 5040, Units_Sold: 168, Customer_Count: 115, Latitude: 40.9, Longitude: -74.1 },
+            { Month: 'April', Region: 'East', Sales: 17500, Profit: 5250, Units_Sold: 175, Customer_Count: 121, Latitude: 40.6, Longitude: -74.0 },
+            { Month: 'May', Region: 'East', Sales: 18900, Profit: 5670, Units_Sold: 189, Customer_Count: 130, Latitude: 40.8, Longitude: -73.8 },
+            { Month: 'January', Region: 'West', Sales: 10900, Profit: 3270, Units_Sold: 109, Customer_Count: 76, Latitude: 34.0, Longitude: -118.2 },
+            { Month: 'February', Region: 'West', Sales: 11700, Profit: 3510, Units_Sold: 117, Customer_Count: 81, Latitude: 34.1, Longitude: -118.3 },
+            { Month: 'March', Region: 'West', Sales: 13400, Profit: 4020, Units_Sold: 134, Customer_Count: 92, Latitude: 34.2, Longitude: -118.1 },
+            { Month: 'April', Region: 'West', Sales: 14800, Profit: 4440, Units_Sold: 148, Customer_Count: 102, Latitude: 33.9, Longitude: -118.2 },
+            { Month: 'May', Region: 'West', Sales: 15600, Profit: 4680, Units_Sold: 156, Customer_Count: 107, Latitude: 34.0, Longitude: -118.0 },
           ];
           setData(mockData);
           setAnalysisStats({
             totalRows: mockData.length,
-            totalColumns: 6,
+            totalColumns: 8,
             chartsCreated: 0,
             lastModified: new Date().toISOString()
           });
         } else if (fileId === '2') {
           setFileName('marketing_metrics.xlsx');
-          setColumns(['Campaign', 'Clicks', 'Conversions', 'Cost', 'CTR', 'CPC']);
+          setColumns(['Campaign', 'Clicks', 'Conversions', 'Cost', 'CTR', 'CPC', 'Region', 'Month']);
           const mockData = [
-            { Campaign: 'Facebook Ads', Clicks: 12500, Conversions: 375, Cost: 3750, CTR: 2.8, CPC: 0.30 },
-            { Campaign: 'Google Ads', Clicks: 18200, Conversions: 546, Cost: 5460, CTR: 3.2, CPC: 0.30 },
-            { Campaign: 'LinkedIn', Clicks: 5800, Conversions: 116, Cost: 2320, CTR: 1.9, CPC: 0.40 },
-            { Campaign: 'Twitter', Clicks: 7800, Conversions: 156, Cost: 1560, CTR: 2.1, CPC: 0.20 },
-            { Campaign: 'Instagram', Clicks: 10300, Conversions: 309, Cost: 3090, CTR: 3.5, CPC: 0.30 },
-            { Campaign: 'TikTok', Clicks: 15500, Conversions: 465, Cost: 4650, CTR: 4.1, CPC: 0.30 },
-            { Campaign: 'YouTube', Clicks: 9200, Conversions: 184, Cost: 2760, CTR: 2.4, CPC: 0.30 },
-            { Campaign: 'Pinterest', Clicks: 4100, Conversions: 82, Cost: 1230, CTR: 1.8, CPC: 0.30 },
+            { Campaign: 'Facebook Ads', Clicks: 12500, Conversions: 375, Cost: 3750, CTR: 2.8, CPC: 0.30, Region: 'North', Month: 'January' },
+            { Campaign: 'Google Ads', Clicks: 18200, Conversions: 546, Cost: 5460, CTR: 3.2, CPC: 0.30, Region: 'South', Month: 'January' },
+            { Campaign: 'LinkedIn', Clicks: 5800, Conversions: 116, Cost: 2320, CTR: 1.9, CPC: 0.40, Region: 'East', Month: 'February' },
+            { Campaign: 'Twitter', Clicks: 7800, Conversions: 156, Cost: 1560, CTR: 2.1, CPC: 0.20, Region: 'West', Month: 'February' },
+            { Campaign: 'Instagram', Clicks: 10300, Conversions: 309, Cost: 3090, CTR: 3.5, CPC: 0.30, Region: 'North', Month: 'March' },
+            { Campaign: 'TikTok', Clicks: 15500, Conversions: 465, Cost: 4650, CTR: 4.1, CPC: 0.30, Region: 'South', Month: 'March' },
+            { Campaign: 'YouTube', Clicks: 9200, Conversions: 184, Cost: 2760, CTR: 2.4, CPC: 0.30, Region: 'East', Month: 'April' },
+            { Campaign: 'Pinterest', Clicks: 4100, Conversions: 82, Cost: 1230, CTR: 1.8, CPC: 0.30, Region: 'West', Month: 'April' },
           ];
           setData(mockData);
           setAnalysisStats({
             totalRows: mockData.length,
-            totalColumns: 6,
+            totalColumns: 8,
             chartsCreated: 0,
             lastModified: new Date(Date.now() - 86400000).toISOString()
           });
         } else if (fileId === '3') {
           setFileName('financial_report_q2.xlsx');
-          setColumns(['Month', 'Revenue', 'Expenses', 'Profit', 'Growth_Rate', 'Margin']);
+          setColumns(['Month', 'Revenue', 'Expenses', 'Profit', 'Growth_Rate', 'Margin', 'Department', 'Quarter']);
           const mockData = [
-            { Month: 'April', Revenue: 125000, Expenses: 87500, Profit: 37500, Growth_Rate: 5.2, Margin: 30.0 },
-            { Month: 'May', Revenue: 132000, Expenses: 92400, Profit: 39600, Growth_Rate: 5.6, Margin: 30.0 },
-            { Month: 'June', Revenue: 158000, Expenses: 110600, Profit: 47400, Growth_Rate: 19.7, Margin: 30.0 },
+            { Month: 'April', Revenue: 125000, Expenses: 87500, Profit: 37500, Growth_Rate: 5.2, Margin: 30.0, Department: 'Sales', Quarter: 'Q2' },
+            { Month: 'May', Revenue: 132000, Expenses: 92400, Profit: 39600, Growth_Rate: 5.6, Margin: 30.0, Department: 'Marketing', Quarter: 'Q2' },
+            { Month: 'June', Revenue: 158000, Expenses: 110600, Profit: 47400, Growth_Rate: 19.7, Margin: 30.0, Department: 'Operations', Quarter: 'Q2' },
           ];
           setData(mockData);
           setAnalysisStats({
             totalRows: mockData.length,
-            totalColumns: 6,
+            totalColumns: 8,
             chartsCreated: 0,
             lastModified: new Date(Date.now() - 86400000 * 3).toISOString()
           });
         } else {
-          // Enhanced generic mock data
+          // Enhanced generic mock data with geographic coordinates
           setFileName(`excel_file_${fileId}.xlsx`);
-          setColumns(['Category', 'Value1', 'Value2', 'Value3', 'Percentage', 'Status']);
+          setColumns(['Category', 'Value1', 'Value2', 'Value3', 'Percentage', 'Status', 'City', 'Temperature']);
           const mockData = [
-            { Category: 'Product A', Value1: 100, Value2: 200, Value3: 300, Percentage: 25.5, Status: 'Active' },
-            { Category: 'Product B', Value1: 150, Value2: 250, Value3: 350, Percentage: 30.2, Status: 'Active' },
-            { Category: 'Product C', Value1: 200, Value2: 300, Value3: 400, Percentage: 35.8, Status: 'Pending' },
-            { Category: 'Product D', Value1: 250, Value2: 350, Value3: 450, Percentage: 40.1, Status: 'Active' },
-            { Category: 'Product E', Value1: 300, Value2: 400, Value3: 500, Percentage: 45.7, Status: 'Inactive' },
+            { Category: 'Product A', Value1: 100, Value2: 200, Value3: 300, Percentage: 25.5, Status: 'Active', City: 'New York', Temperature: 22.5 },
+            { Category: 'Product B', Value1: 150, Value2: 250, Value3: 350, Percentage: 30.2, Status: 'Active', City: 'California', Temperature: 28.1 },
+            { Category: 'Product C', Value1: 200, Value2: 300, Value3: 400, Percentage: 35.8, Status: 'Pending', City: 'Texas', Temperature: 31.7 },
+            { Category: 'Product D', Value1: 250, Value2: 350, Value3: 450, Percentage: 40.1, Status: 'Active', City: 'Florida', Temperature: 29.3 },
+            { Category: 'Product E', Value1: 300, Value2: 400, Value3: 500, Percentage: 45.7, Status: 'Inactive', City: 'London', Temperature: 18.9 },
           ];
           setData(mockData);
           setAnalysisStats({
             totalRows: mockData.length,
-            totalColumns: 6,
+            totalColumns: 8,
             chartsCreated: 0,
             lastModified: new Date(Date.now() - 86400000 * 5).toISOString()
           });
@@ -190,6 +194,22 @@ const FileAnalysis: React.FC = () => {
     });
   };
 
+  const hasGeographicData = columns.some(col => 
+    col.toLowerCase().includes('lat') || 
+    col.toLowerCase().includes('lng') || 
+    col.toLowerCase().includes('longitude') ||
+    col.toLowerCase().includes('city') ||
+    col.toLowerCase().includes('region') ||
+    col.toLowerCase().includes('location')
+  );
+
+  const hasTimeData = columns.some(col =>
+    col.toLowerCase().includes('date') ||
+    col.toLowerCase().includes('time') ||
+    col.toLowerCase().includes('month') ||
+    col.toLowerCase().includes('year')
+  );
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-4rem)]">
@@ -208,10 +228,10 @@ const FileAnalysis: React.FC = () => {
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-gray-900 flex items-center">
               <FileText className="h-8 w-8 mr-3 text-blue-600" />
-              📊 Analyzing: {fileName}
+              🚀 Advanced 3D Analytics: {fileName}
             </h1>
             <p className="text-gray-600 mt-2">
-              Create interactive charts, get AI insights, and export in multiple formats
+              Create 2D charts, 3D visualizations, geographic maps, and get AI insights with export capabilities
             </p>
             
             {/* Enhanced Stats Bar */}
@@ -232,6 +252,18 @@ const FileAnalysis: React.FC = () => {
                 <Save className="h-4 w-4 mr-1 text-amber-500" />
                 <span>Modified {formatDate(analysisStats.lastModified)}</span>
               </div>
+              {hasGeographicData && (
+                <div className="flex items-center">
+                  <Globe className="h-4 w-4 mr-1 text-blue-500" />
+                  <span>Geographic data detected</span>
+                </div>
+              )}
+              {hasTimeData && (
+                <div className="flex items-center">
+                  <History className="h-4 w-4 mr-1 text-orange-500" />
+                  <span>Time-series data detected</span>
+                </div>
+              )}
             </div>
           </div>
           
@@ -260,11 +292,23 @@ const FileAnalysis: React.FC = () => {
           <div className="flex items-center">
             <Zap className="h-8 w-8 text-blue-600 mr-3" />
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">🚀 All Advanced Features Active</h3>
+              <h3 className="text-lg font-semibold text-gray-900">🌟 Complete 3D Analytics Suite Active</h3>
               <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-700">
                 <div className="flex items-center">
                   <span className="text-green-500 mr-2">✅</span>
-                  Interactive Charts
+                  2D & 3D Charts
+                </div>
+                <div className="flex items-center">
+                  <span className="text-green-500 mr-2">✅</span>
+                  Geographic Mapping
+                </div>
+                <div className="flex items-center">
+                  <span className="text-green-500 mr-2">✅</span>
+                  Power Map (3D Globe)
+                </div>
+                <div className="flex items-center">
+                  <span className="text-green-500 mr-2">✅</span>
+                  Surface Charts
                 </div>
                 <div className="flex items-center">
                   <span className="text-green-500 mr-2">✅</span>
@@ -276,14 +320,18 @@ const FileAnalysis: React.FC = () => {
                 </div>
                 <div className="flex items-center">
                   <span className="text-green-500 mr-2">✅</span>
-                  Data History
+                  Time Animation
+                </div>
+                <div className="flex items-center">
+                  <span className="text-green-500 mr-2">✅</span>
+                  Interactive Controls
                 </div>
               </div>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-600">8+ Chart Types Available</p>
-            <p className="text-xs text-gray-500">PNG • PDF • JPEG • CSV</p>
+            <p className="text-sm text-gray-600">15+ Visualization Types</p>
+            <p className="text-xs text-gray-500">2D • 3D • Geographic • Surface</p>
           </div>
         </div>
       </div>
@@ -312,9 +360,95 @@ const FileAnalysis: React.FC = () => {
         </div>
       )}
 
+      {/* Visualization Type Tabs */}
+      <div className="mb-8">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('2d')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === '2d'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center">
+                <BarChart3 className="h-5 w-5 mr-2" />
+                📊 2D Charts
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('3d')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === '3d'
+                  ? 'border-purple-500 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center">
+                <Mountain className="h-5 w-5 mr-2" />
+                🏔️ 3D Visualizations
+              </div>
+            </button>
+            {hasGeographicData && (
+              <button
+                onClick={() => setActiveTab('powermap')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'powermap'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center">
+                  <Globe className="h-5 w-5 mr-2" />
+                  🌍 Power Map
+                </div>
+              </button>
+            )}
+          </nav>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-6">
-          <ChartCreator columns={columns} onCreateChart={handleCreateChart} />
+          {/* Chart Creator based on active tab */}
+          {activeTab === '2d' && (
+            <ChartCreator columns={columns} onCreateChart={handleCreateChart} />
+          )}
+          
+          {activeTab === '3d' && (
+            <Chart3DCreator columns={columns} onCreateChart={handleCreateChart} />
+          )}
+          
+          {activeTab === 'powermap' && hasGeographicData && (
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center mb-4">
+                <Globe className="h-6 w-6 mr-2 text-green-600" />
+                🌍 Power Map Settings
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Geographic data detected! Power Map visualization is ready below.
+              </p>
+              <div className="space-y-3 text-sm text-gray-600">
+                <div className="flex items-center">
+                  <span className="text-green-500 mr-2">✅</span>
+                  3D Globe visualization
+                </div>
+                <div className="flex items-center">
+                  <span className="text-green-500 mr-2">✅</span>
+                  Interactive rotation & zoom
+                </div>
+                <div className="flex items-center">
+                  <span className="text-green-500 mr-2">✅</span>
+                  Time-based animation
+                </div>
+                <div className="flex items-center">
+                  <span className="text-green-500 mr-2">✅</span>
+                  Multiple visualization types
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* Enhanced Data Preview */}
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
@@ -375,43 +509,90 @@ const FileAnalysis: React.FC = () => {
         </div>
         
         <div className="lg:col-span-2">
-          {charts.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-lg p-12 flex flex-col items-center justify-center text-center border border-gray-100">
-              <div className="bg-gradient-to-r from-blue-100 to-purple-100 p-6 rounded-full mb-6">
-                <BarChart3 className="h-12 w-12 text-blue-600" />
-              </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-3">Ready to Create Charts</h3>
-              <p className="text-gray-600 mb-6 max-w-md">
-                Use the chart creator on the left to visualize your data. Select your axes and chart type to get started with AI-powered insights.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-500">
-                <div className="flex items-center justify-center p-3 bg-blue-50 rounded-lg">
-                  <Zap className="h-4 w-4 mr-2 text-blue-600" />
-                  AI-powered insights
-                </div>
-                <div className="flex items-center justify-center p-3 bg-purple-50 rounded-lg">
-                  <Download className="h-4 w-4 mr-2 text-purple-600" />
-                  Multiple export formats
-                </div>
-                <div className="flex items-center justify-center p-3 bg-green-50 rounded-lg">
-                  <Save className="h-4 w-4 mr-2 text-green-600" />
-                  Save charts for later
-                </div>
-              </div>
-            </div>
-          ) : (
+          {/* Power Map Visualization */}
+          {activeTab === 'powermap' && hasGeographicData && (
             <div className="space-y-8">
-              {charts.map((chartOptions, index) => (
-                <EnhancedChartRenderer
-                  key={index}
-                  options={chartOptions}
-                  data={data}
-                  fileId={fileId || ''}
-                  onSaveSuccess={handleSaveSuccess}
-                  onDelete={() => handleDeleteChart(index)}
-                />
-              ))}
+              <PowerMapVisualization
+                data={data}
+                locationColumn={columns.find(col => 
+                  col.toLowerCase().includes('region') || 
+                  col.toLowerCase().includes('city') ||
+                  col.toLowerCase().includes('location')
+                ) || columns[0]}
+                valueColumn={columns.find(col => 
+                  col.toLowerCase().includes('sales') || 
+                  col.toLowerCase().includes('value') ||
+                  col.toLowerCase().includes('revenue')
+                ) || columns[1]}
+                timeColumn={hasTimeData ? columns.find(col =>
+                  col.toLowerCase().includes('month') ||
+                  col.toLowerCase().includes('date') ||
+                  col.toLowerCase().includes('time')
+                ) : undefined}
+                onExport={() => console.log('Exporting Power Map...')}
+              />
             </div>
+          )}
+
+          {/* Regular Charts */}
+          {(activeTab === '2d' || activeTab === '3d') && (
+            <>
+              {charts.length === 0 ? (
+                <div className="bg-white rounded-xl shadow-lg p-12 flex flex-col items-center justify-center text-center border border-gray-100">
+                  <div className="bg-gradient-to-r from-blue-100 to-purple-100 p-6 rounded-full mb-6">
+                    {activeTab === '3d' ? (
+                      <Mountain className="h-12 w-12 text-purple-600" />
+                    ) : (
+                      <BarChart3 className="h-12 w-12 text-blue-600" />
+                    )}
+                  </div>
+                  <h3 className="text-2xl font-semibold text-gray-900 mb-3">
+                    Ready to Create {activeTab === '3d' ? '3D' : '2D'} Charts
+                  </h3>
+                  <p className="text-gray-600 mb-6 max-w-md">
+                    Use the chart creator on the left to visualize your data with {activeTab === '3d' ? '3D depth, rotation, and advanced surface mapping' : 'interactive 2D charts and AI-powered insights'}.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-500">
+                    <div className="flex items-center justify-center p-3 bg-blue-50 rounded-lg">
+                      <Zap className="h-4 w-4 mr-2 text-blue-600" />
+                      AI-powered insights
+                    </div>
+                    <div className="flex items-center justify-center p-3 bg-purple-50 rounded-lg">
+                      <Download className="h-4 w-4 mr-2 text-purple-600" />
+                      Multiple export formats
+                    </div>
+                    <div className="flex items-center justify-center p-3 bg-green-50 rounded-lg">
+                      <Save className="h-4 w-4 mr-2 text-green-600" />
+                      Save charts for later
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {charts.map((chartOptions, index) => (
+                    <div key={index}>
+                      {activeTab === '3d' || chartOptions.chartType.includes('3d') ? (
+                        <Chart3DRenderer
+                          options={chartOptions}
+                          data={data}
+                          fileId={fileId || ''}
+                          onSaveSuccess={handleSaveSuccess}
+                          onDelete={() => handleDeleteChart(index)}
+                        />
+                      ) : (
+                        <EnhancedChartRenderer
+                          options={chartOptions}
+                          data={data}
+                          fileId={fileId || ''}
+                          onSaveSuccess={handleSaveSuccess}
+                          onDelete={() => handleDeleteChart(index)}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

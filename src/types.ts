@@ -34,7 +34,11 @@ export type ChartType =
   | 'area' 
   | 'bubble' 
   | 'column3d' 
-  | 'bar3d';
+  | 'bar3d'
+  | 'surface3d'
+  | 'map3d'
+  | 'terrain3d'
+  | 'bubble3d';
 
 export interface ChartOptions {
   title: string;
@@ -42,4 +46,26 @@ export interface ChartOptions {
   xAxis: string;
   yAxis: string;
   zAxis?: string;
+}
+
+export interface Geographic3DData {
+  location: string;
+  latitude: number;
+  longitude: number;
+  value: number;
+  time?: string;
+}
+
+export interface Surface3DData {
+  x: number;
+  y: number;
+  z: number;
+  color?: string;
+}
+
+export interface PowerMapOptions {
+  mapType: 'globe' | 'flat';
+  visualizationType: 'bars' | 'heatmap' | 'bubbles';
+  animationSpeed: number;
+  showTimeAnimation: boolean;
 }
