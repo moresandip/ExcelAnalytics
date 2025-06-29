@@ -6,7 +6,7 @@ import Chart3DRenderer from '../components/charts/Chart3DRenderer';
 import Chart3DCreator from '../components/charts/Chart3DCreator';
 import PowerMapVisualization from '../components/charts/PowerMapVisualization';
 import { ChartOptions } from '../types';
-import { Save, Download, Trash2, AlertCircle, BarChart3, History, Zap, TrendingUp, FileText, Eye, Globe, Mountain, Layers } from 'lucide-react';
+import { Save, Download, Trash2, AlertCircle, BarChart3, History, Zap, TrendingUp, FileText, Eye, Globe, Mountain, Layers, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import SavedChartsHistory from '../components/charts/SavedChartsHistory';
 
 const FileAnalysis: React.FC = () => {
@@ -17,6 +17,7 @@ const FileAnalysis: React.FC = () => {
   const [columns, setColumns] = useState<string[]>([]);
   const [data, setData] = useState<any[]>([]);
   const [charts, setCharts] = useState<ChartOptions[]>([]);
+  const [currentChartIndex, setCurrentChartIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -151,6 +152,7 @@ const FileAnalysis: React.FC = () => {
 
   const handleCreateChart = (options: ChartOptions) => {
     setCharts(prevCharts => [...prevCharts, options]);
+    setCurrentChartIndex(charts.length); // Set to the new chart index
     setAnalysisStats(prev => ({ 
       ...prev, 
       chartsCreated: prev.chartsCreated + 1,
@@ -160,6 +162,10 @@ const FileAnalysis: React.FC = () => {
 
   const handleDeleteChart = (index: number) => {
     setCharts(prevCharts => prevCharts.filter((_, i) => i !== index));
+    // Adjust current chart index if necessary
+    if (currentChartIndex >= charts.length - 1) {
+      setCurrentChartIndex(Math.max(0, charts.length - 2));
+    }
     setAnalysisStats(prev => ({ 
       ...prev, 
       chartsCreated: Math.max(0, prev.chartsCreated - 1),
@@ -209,6 +215,14 @@ const FileAnalysis: React.FC = () => {
     col.toLowerCase().includes('month') ||
     col.toLowerCase().includes('year')
   );
+
+  const goToPreviousChart = () => {
+    setCurrentChartIndex(prev => Math.max(0, prev - 1));
+  };
+
+  const goToNextChart = () => {
+    setCurrentChartIndex(prev => Math.min(charts.length - 1, prev + 1));
+  };
 
   if (loading) {
     return (
@@ -292,8 +306,16 @@ const FileAnalysis: React.FC = () => {
           <div className="flex items-center">
             <Zap className="h-8 w-8 text-blue-600 mr-3" />
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">🌟 Complete 3D Analytics Suite Active</h3>
+              <h3 className="text-lg font-semibold text-gray-900">🌟 Complete 3D Analytics Suite Active - One Chart Display Mode</h3>
               <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-700">
+                <div className="flex items-center">
+                  <span className="text-green-500 mr-2">✅</span>
+                  Single Chart Focus
+                </div>
+                <div className="flex items-center">
+                  <span className="text-green-500 mr-2">✅</span>
+                  Chart Navigation
+                </div>
                 <div className="flex items-center">
                   <span className="text-green-500 mr-2">✅</span>
                   2D & 3D Charts
@@ -302,36 +324,12 @@ const FileAnalysis: React.FC = () => {
                   <span className="text-green-500 mr-2">✅</span>
                   Geographic Mapping
                 </div>
-                <div className="flex items-center">
-                  <span className="text-green-500 mr-2">✅</span>
-                  Power Map (3D Globe)
-                </div>
-                <div className="flex items-center">
-                  <span className="text-green-500 mr-2">✅</span>
-                  Surface Charts
-                </div>
-                <div className="flex items-center">
-                  <span className="text-green-500 mr-2">✅</span>
-                  AI Insights
-                </div>
-                <div className="flex items-center">
-                  <span className="text-green-500 mr-2">✅</span>
-                  Multi-Format Export
-                </div>
-                <div className="flex items-center">
-                  <span className="text-green-500 mr-2">✅</span>
-                  Time Animation
-                </div>
-                <div className="flex items-center">
-                  <span className="text-green-500 mr-2">✅</span>
-                  Interactive Controls
-                </div>
               </div>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-600">15+ Visualization Types</p>
-            <p className="text-xs text-gray-500">2D • 3D • Geographic • Surface</p>
+            <p className="text-sm text-gray-600">One Chart at a Time</p>
+            <p className="text-xs text-gray-500">Better Focus • Cleaner UI</p>
           </div>
         </div>
       </div>
@@ -534,7 +532,7 @@ const FileAnalysis: React.FC = () => {
             </div>
           )}
 
-          {/* Regular Charts */}
+          {/* Single Chart Display */}
           {(activeTab === '2d' || activeTab === '3d') && (
             <>
               {charts.length === 0 ? (
@@ -568,28 +566,89 @@ const FileAnalysis: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-8">
-                  {charts.map((chartOptions, index) => (
-                    <div key={index}>
-                      {activeTab === '3d' || chartOptions.chartType.includes('3d') ? (
+                <div className="space-y-6">
+                  {/* Chart Navigation Header */}
+                  <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          📊 Chart {currentChartIndex + 1} of {charts.length}
+                        </h3>
+                        <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                          {charts[currentChartIndex]?.chartType} chart
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={goToPreviousChart}
+                          disabled={currentChartIndex === 0}
+                          className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          <ChevronLeft className="h-4 w-4 mr-1" />
+                          Previous
+                        </button>
+                        
+                        <button
+                          onClick={goToNextChart}
+                          disabled={currentChartIndex === charts.length - 1}
+                          className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          Next
+                          <ChevronRight className="h-4 w-4 ml-1" />
+                        </button>
+                        
+                        <button
+                          onClick={() => handleDeleteChart(currentChartIndex)}
+                          className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg text-red-600 bg-red-100 hover:bg-red-200 transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Chart Thumbnails */}
+                    {charts.length > 1 && (
+                      <div className="mt-4 flex space-x-2 overflow-x-auto">
+                        {charts.map((chart, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setCurrentChartIndex(index)}
+                            className={`flex-shrink-0 px-3 py-2 text-xs font-medium rounded-lg transition-all ${
+                              index === currentChartIndex
+                                ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
+                            }`}
+                          >
+                            {index + 1}. {chart.title}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Current Chart Display */}
+                  {charts[currentChartIndex] && (
+                    <div>
+                      {activeTab === '3d' || charts[currentChartIndex].chartType.includes('3d') ? (
                         <Chart3DRenderer
-                          options={chartOptions}
+                          options={charts[currentChartIndex]}
                           data={data}
                           fileId={fileId || ''}
                           onSaveSuccess={handleSaveSuccess}
-                          onDelete={() => handleDeleteChart(index)}
+                          onDelete={() => handleDeleteChart(currentChartIndex)}
                         />
                       ) : (
                         <EnhancedChartRenderer
-                          options={chartOptions}
+                          options={charts[currentChartIndex]}
                           data={data}
                           fileId={fileId || ''}
                           onSaveSuccess={handleSaveSuccess}
-                          onDelete={() => handleDeleteChart(index)}
+                          onDelete={() => handleDeleteChart(currentChartIndex)}
                         />
                       )}
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
             </>
