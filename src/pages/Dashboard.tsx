@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BarChart3, Upload, AreaChart, Clock, FileText, Plus, TrendingUp, Zap, Database, Download, Eye, Calendar, Sparkles } from 'lucide-react';
+import { BarChart3, Upload, AreaChart, Clock, FileText, Plus, TrendingUp, Zap, Database, Download, Eye, Calendar, Sparkles, Edit, Trash2, MoreVertical } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { ExcelFile, ChartData } from '../types';
 import SavedChartsHistory from '../components/charts/SavedChartsHistory';
@@ -18,6 +18,9 @@ const Dashboard: React.FC = () => {
   const [recentFiles, setRecentFiles] = useState<ExcelFile[]>([]);
   const [recentCharts, setRecentCharts] = useState<ChartData[]>([]);
   const [showChartsHistory, setShowChartsHistory] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
+  const [editingFile, setEditingFile] = useState<string | null>(null);
+  const [editFileName, setEditFileName] = useState('');
   const [stats, setStats] = useState({
     totalFiles: 0,
     totalCharts: 0,
@@ -146,6 +149,36 @@ const Dashboard: React.FC = () => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  const handleDeleteFile = (fileId: string) => {
+    setRecentFiles(prev => prev.filter(file => file.id !== fileId));
+    setStats(prev => ({ ...prev, totalFiles: prev.totalFiles - 1 }));
+    setShowDeleteModal(null);
+  };
+
+  const handleEditFile = (fileId: string, newName: string) => {
+    setRecentFiles(prev => prev.map(file => 
+      file.id === fileId ? { ...file, name: newName } : file
+    ));
+    setEditingFile(null);
+    setEditFileName('');
+  };
+
+  const startEdit = (file: ExcelFile) => {
+    setEditingFile(file.id);
+    setEditFileName(file.name);
+  };
+
+  const cancelEdit = () => {
+    setEditingFile(null);
+    setEditFileName('');
+  };
+
+  const handleDownloadFile = (file: ExcelFile) => {
+    // Mock download functionality
+    console.log(`Downloading file: ${file.name}`);
+    // In a real app, this would trigger the actual download
   };
 
   return (
@@ -389,7 +422,7 @@ const Dashboard: React.FC = () => {
           </FadeInUp>
         )}
 
-        {/* Recent Files Section */}
+        {/* Recent Files Section with Edit/Delete */}
         <FadeInUp delay={1600}>
           <div className="mb-12">
             <div className="flex justify-between items-center mb-6">
@@ -433,7 +466,36 @@ const Dashboard: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <FileText className="h-5 w-5 text-gray-400 mr-3 group-hover:animate-bounce-gentle" />
-                            <div className="text-sm font-medium text-gray-900">{file.name}</div>
+                            {editingFile === file.id ? (
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="text"
+                                  value={editFileName}
+                                  onChange={(e) => setEditFileName(e.target.value)}
+                                  className="text-sm font-medium text-gray-900 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  onKeyPress={(e) => {
+                                    if (e.key === 'Enter') {
+                                      handleEditFile(file.id, editFileName);
+                                    }
+                                  }}
+                                  autoFocus
+                                />
+                                <button
+                                  onClick={() => handleEditFile(file.id, editFileName)}
+                                  className="text-green-600 hover:text-green-800 text-sm"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={cancelEdit}
+                                  className="text-gray-600 hover:text-gray-800 text-sm"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="text-sm font-medium text-gray-900">{file.name}</div>
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -448,14 +510,37 @@ const Dashboard: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {file.columns.length} columns
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                          <Link 
-                            to={`/analysis/${file.id}`} 
-                            className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-lg text-blue-600 bg-blue-100 hover:bg-blue-200 transition-all hover:scale-105 group-hover:animate-glow"
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            Analyze
-                          </Link>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center space-x-2">
+                            <Link 
+                              to={`/analysis/${file.id}`} 
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-lg text-blue-600 bg-blue-100 hover:bg-blue-200 transition-all hover:scale-105 group-hover:animate-glow"
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Analyze
+                            </Link>
+                            
+                            <button
+                              onClick={() => startEdit(file)}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-lg text-amber-600 bg-amber-100 hover:bg-amber-200 transition-all hover:scale-105"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            
+                            <button
+                              onClick={() => handleDownloadFile(file)}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-lg text-green-600 bg-green-100 hover:bg-green-200 transition-all hover:scale-105"
+                            >
+                              <Download className="h-4 w-4" />
+                            </button>
+                            
+                            <button
+                              onClick={() => setShowDeleteModal(file.id)}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-lg text-red-600 bg-red-100 hover:bg-red-200 transition-all hover:scale-105"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -546,6 +631,32 @@ const Dashboard: React.FC = () => {
           </div>
         </FadeInUp>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Delete File</h3>
+            <p className="text-sm text-gray-500 mb-6">
+              Are you sure you want to delete this file? This action cannot be undone and will also remove all associated charts.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDeleteModal(null)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteFile(showDeleteModal)}
+                className="px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
